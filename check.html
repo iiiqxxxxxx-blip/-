@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Проверка</title></head>
+<body style="font-family:system-ui;padding:20px">
+<h1>Проверка GitHub Pages</h1>
+<button id="b">Нажми</button>
+<p id="r">Если кнопка меняет текст — JavaScript работает.</p>
+<script>
+document.getElementById('b').addEventListener('click', function(){
+  document.getElementById('r').textContent = 'JavaScript работает ✅';
+});
+</script>
+</body>
+</html>
