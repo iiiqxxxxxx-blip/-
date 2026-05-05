@@ -1,0 +1,10 @@
+{
+  "name": "Fit Tracker Pro",
+  "short_name": "FitTracker",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "description": "Трекер похудения с едой, водой, тренировками и сканером штрих-кодов",
+  "icons": []
+}

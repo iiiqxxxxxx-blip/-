@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Fit Tracker Pro v4 — barcode</title>
+  <style>
+    :root{
+      --bg:#07111f;--card:#101827;--card2:#0b1322;--text:#e5e7eb;--muted:#9ca3af;
+      --line:#263248;--green:#22c55e;--blue:#38bdf8;--red:#ef4444;--orange:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#07111f,#111827);color:var(--text)}
+    header{position:sticky;top:0;z-index:20;padding:16px;background:rgba(7,17,31,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+    main{max-width:1180px;margin:0 auto;padding:14px}
+    h1{margin:0;font-size:23px}.sub{font-size:13px;color:var(--muted);margin-top:4px}
+    h2{font-size:20px;margin:0 0 12px} h3{margin:14px 0 8px}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}}
+    @media(max-width:520px){.grid{grid-template-columns:1fr}h1{font-size:20px}}
+    .card{background:rgba(16,24,39,.95);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 12px 26px rgba(0,0,0,.25)}
+    .metric{font-size:27px;font-weight:900;margin:4px 0}.label,.small{color:var(--muted);font-size:13px}.small{line-height:1.45}
+    input,select,textarea,button{width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);background:#07111f;color:var(--text);font-size:15px}
+    textarea{min-height:72px;resize:vertical}
+    button{border:0;background:linear-gradient(135deg,var(--green),#16a34a);color:#05220f;font-weight:900;cursor:pointer}
+    button.secondary{background:#172033;color:var(--text);border:1px solid var(--line)}
+    button.danger{background:linear-gradient(135deg,#ef4444,#b91c1c);color:white}
+    button.blue{background:linear-gradient(135deg,var(--blue),#0284c7);color:#03131f}
+    .tabs{display:flex;gap:8px;overflow:auto;margin:14px 0;padding-bottom:2px}
+    .tab{white-space:nowrap;padding:10px 12px;border-radius:999px;background:#172033;border:1px solid var(--line);cursor:pointer;color:var(--muted);user-select:none}
+    .tab.active{background:var(--green);color:#05220f;font-weight:900}
+    .section{display:none}.section.active{display:block}
+    .progress{height:12px;border-radius:999px;background:#07111f;border:1px solid var(--line);overflow:hidden}.bar{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));width:0%}
+    .checks{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px}.check{display:flex;align-items:center;gap:8px;background:#07111f;border:1px solid var(--line);border-radius:12px;padding:10px}.check input{width:auto}
+    table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--muted);font-weight:700}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#07111f;border:1px solid var(--line);font-size:12px;color:var(--muted)}
+    .ok{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--orange)}
+    .water-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+    .cup{aspect-ratio:1;border-radius:14px;border:1px solid var(--line);background:#07111f;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:26px;transition:.15s}
+    .cup.on{background:linear-gradient(135deg,#0284c7,#38bdf8);transform:translateY(-1px);box-shadow:0 8px 18px rgba(56,189,248,.18)}
+    .food-list{max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:14px}.food-item{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px;border-bottom:1px solid var(--line);cursor:pointer}.food-item:hover{background:#172033}
+    .meal-card{background:#07111f;border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px}
+    .workout-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media(max-width:900px){.workout-grid{grid-template-columns:1fr}}
+    .wcard{background:#07111f;border:1px solid var(--line);border-radius:16px;padding:12px}
+    .tag{font-size:12px;padding:3px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);display:inline-block;margin:2px}
+    img.preview{max-width:100%;border-radius:14px;border:1px solid var(--line);margin-top:8px}
+    canvas{width:100%;height:260px;background:#07111f;border:1px solid var(--line);border-radius:14px}
+  </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#07111f">
+</head>
+<body>
+<header>
+  <h1>Fit Tracker Pro v4 — домашнее похудение</h1>
+  <div class="sub">Версия со сканером штрих-кода/QR, большой базой продуктов, водой, тренировками и графиками.</div>
+</header>
+<main>
+  <div class="grid">
+    <div class="card"><div class="label">Текущий вес</div><div class="metric" id="currentWeight">—</div><div class="small">Последняя запись</div></div>
+    <div class="card"><div class="label">Сброшено</div><div class="metric ok" id="lostWeight">—</div><div class="small">От стартового веса</div></div>
+    <div class="card"><div class="label">До цели</div><div class="metric" id="toGoal">—</div><div class="small">До 70 кг или твоей цели</div></div>
+    <div class="card"><div class="label">Выполнение 7 дней</div><div class="metric" id="weekScore">—</div><div class="progress"><div class="bar" id="weekBar"></div></div></div>
+  </div>
+
+  <div class="tabs">
+    <button type="button" class="tab active" data-tab="today">Сегодня</button>
+    <button type="button" class="tab" data-tab="food">Еда</button>
+    <button type="button" class="tab" data-tab="water">Вода</button>
+    <button type="button" class="tab" data-tab="workouts">Тренировки</button>
+    <button type="button" class="tab" data-tab="charts">Графики</button>
+    <button type="button" class="tab" data-tab="history">История</button>
+    <button type="button" class="tab" data-tab="settings">Настройки</button>
+  </div>
+
+  <section id="today" class="section active">
+    <div class="row">
+      <div class="card">
+        <h2>Отметка дня</h2>
+        <div class="row">
+          <label>Дата <input id="date" type="date"></label>
+          <label>Вес, кг <input id="weight" type="number" step="0.1"></label>
+        </div>
+        <div class="row">
+          <label>Шаги <input id="steps" type="number"></label>
+          <label>Сон, часов <input id="sleep" type="number" step="0.1"></label>
+        </div>
+        <label>Тренировка
+          <select id="workout"></select>
+        </label>
+        <div class="checks">
+          <label class="check"><input id="doneWorkout" type="checkbox"> Тренировка сделана</label>
+          <label class="check"><input id="doneFood" type="checkbox"> Питание по плану</label>
+          <label class="check"><input id="doneSteps" type="checkbox"> Шаги выполнены</label>
+          <label class="check"><input id="noSugar" type="checkbox"> Без сладких напитков</label>
+        </div>
+        <label style="display:block;margin-top:12px">Комментарий
+          <textarea id="note"></textarea>
+        </label>
+        <div class="row" style="margin-top:12px">
+          <button type="button" id="saveDayBtn">Завершить / сохранить день</button>
+          <button type="button" class="secondary" id="planBtn">План дня</button>
+        </div>
+        <p class="small" id="saveStatus"></p>
+      </div>
+      <div class="card">
+        <h2>Итоги сегодня</h2>
+        <p><span class="pill">Калории</span> <b id="todayCalories">0</b> / <span id="goalCaloriesText">2100</span> ккал</p>
+        <div class="progress"><div class="bar" id="calBar"></div></div>
+        <p><span class="pill">Белок</span> <b id="todayProtein">0</b> / <span id="goalProteinText">160</span> г</p>
+        <div class="progress"><div class="bar" id="proteinBar"></div></div>
+        <p><span class="pill">Вода</span> <b id="todayWater">0</b> / <span id="goalWaterText">2.5</span> л</p>
+        <div class="progress"><div class="bar" id="waterBar"></div></div>
+        <p><span class="pill">План</span></p>
+        <div id="todayPlan" class="small"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="food" class="section">
+    <div class="row">
+      <div class="card">
+        <h2>Добавить еду</h2>
+        <div class="row">
+          <label>Приём пищи
+            <select id="mealType"><option>Завтрак</option><option>Обед</option><option>Перекус</option><option>Ужин</option><option>Другое</option></select>
+          </label>
+          <label>Поиск продукта <input id="foodSearch" placeholder="курица, рис, творог..."></label>
+        </div>
+        <div class="food-list" id="foodResults"></div>
+        <h3>Или добавить вручную</h3>
+        <div class="row">
+          <input id="customName" placeholder="Название">
+          <input id="customGrams" type="number" placeholder="Граммы">
+        </div>
+        <div class="row">
+          <input id="customKcal100" type="number" placeholder="Ккал на 100 г">
+          <input id="customProtein100" type="number" placeholder="Белок на 100 г">
+        </div>
+        <button type="button" style="margin-top:10px" id="addCustomFoodBtn">Добавить вручную</button>
+
+        <h3>Сканер штрих-кода / QR товара</h3>
+        <p class="small">На iPhone камера работает только если открыть приложение как настоящий сайт по HTTPS. Для локального файла используй ручной ввод кода или фото.</p>
+        <div class="row">
+          <input id="barcodeInput" placeholder="Введи штрих-код вручную">
+          <button type="button" class="blue" id="lookupBarcodeBtn">Найти по коду</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button type="button" class="secondary" id="startScanBtn">Открыть камеру</button>
+          <button type="button" class="secondary" id="stopScanBtn">Закрыть камеру</button>
+        </div>
+        <video id="barcodeVideo" playsinline muted style="display:none;width:100%;border-radius:14px;border:1px solid var(--line);margin-top:8px;background:#000"></video>
+        <canvas id="barcodeCanvas" width="640" height="360" style="display:none"></canvas>
+        <div id="barcodeStatus" class="small" style="margin-top:8px"></div>
+
+        <h3>Фото еды</h3>
+        <input id="foodPhoto" type="file" accept="image/*">
+        <img id="photoPreview" class="preview" style="display:none">
+        <p class="small">Фото сохраняется только как превью в текущей сессии. Реальное ИИ-распознавание калорий требует API/сервер.</p>
+      </div>
+      <div class="card">
+        <h2>Еда за день</h2>
+        <div id="mealsList"></div>
+        <button type="button" class="secondary" id="clearMealsBtn">Очистить еду за день</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="water" class="section">
+    <div class="row">
+      <div class="card">
+        <h2>Вода — кликай по стаканам</h2>
+        <p class="small">1 стакан = 250 мл. Повторный клик по заполненному диапазону меняет количество.</p>
+        <div class="water-grid" id="waterCups"></div>
+        <div class="row">
+          <button type="button" class="blue" id="addWaterBtn">+ 250 мл</button>
+          <button type="button" class="secondary" id="removeWaterBtn">− 250 мл</button>
+        </div>
+        <button type="button" class="secondary" style="margin-top:10px" id="resetWaterBtn">Сбросить воду сегодня</button>
+      </div>
+      <div class="card">
+        <h2>Водный прогресс</h2>
+        <div class="metric" id="waterBig">0 л</div>
+        <div class="progress"><div class="bar" id="waterBigBar"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="workouts" class="section">
+    <div class="card">
+      <h2>Библиотека тренировок дома</h2>
+      <div class="row">
+        <select id="workoutFilter">
+          <option value="Все">Все</option><option value="Силовая">Силовая</option><option value="Кардио">Кардио</option><option value="Пресс">Пресс</option><option value="Лёгкая">Лёгкая</option>
+        </select>
+        <input id="workoutSearch" placeholder="поиск: ноги, грудь, пресс...">
+      </div>
+    </div>
+    <div class="workout-grid" id="workoutLibrary" style="margin-top:12px"></div>
+  </section>
+
+  <section id="charts" class="section">
+    <div class="row">
+      <div class="card"><h2>Вес</h2><canvas id="weightChart" width="800" height="280"></canvas></div>
+      <div class="card"><h2>Калории</h2><canvas id="calChart" width="800" height="280"></canvas></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="card"><h2>Белок и вода</h2><canvas id="proteinWaterChart" width="800" height="280"></canvas></div>
+      <div class="card"><h2>Выполнение</h2><canvas id="scoreChart" width="800" height="280"></canvas></div>
+    </div>
+  </section>
+
+  <section id="history" class="section">
+    <div class="card">
+      <h2>История</h2>
+      <div style="overflow:auto"><table id="historyTable"></table></div>
+      <div class="row" style="margin-top:12px">
+        <button type="button" class="secondary" id="exportBtn">Экспорт данных</button>
+        <button type="button" class="danger" id="resetAllBtn">Очистить всё</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="settings" class="section">
+    <div class="card">
+      <h2>Настройки</h2>
+      <div class="row"><label>Стартовый вес <input id="startWeight" type="number" step="0.1"></label><label>Целевой вес <input id="goalWeight" type="number" step="0.1"></label></div>
+      <div class="row"><label>Цель калорий <input id="goalCalories" type="number"></label><label>Цель белка, г <input id="goalProtein" type="number"></label></div>
+      <div class="row"><label>Цель шагов <input id="goalSteps" type="number"></label><label>Цель воды, л <input id="goalWater" type="number" step="0.1"></label></div>
+      <button type="button" style="margin-top:12px" id="saveSettingsBtn">Сохранить настройки</button>
+      <p class="small">Данные хранятся локально в браузере. Для синхронизации и ИИ по фото нужен сервер.</p>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+'use strict';
+
+function el(id){ return document.getElementById(id); }
+function val(id){ return el(id).value; }
+function setText(id, txt){ el(id).textContent = txt; }
+function setVal(id, v){ el(id).value = v; }
+function setWidth(id, pct){ el(id).style.width = Math.max(0, Math.min(100, pct || 0)) + '%'; }
+function num(v){ var x = parseFloat(v); return isNaN(x) ? null : x; }
+function today(){ return new Date().toISOString().slice(0,10); }
+function safeJSON(key, fallback){
+  try { return JSON.parse(localStorage.getItem(key) || 'null') || fallback; }
+  catch(e){ return fallback; }
+}
+
+var defaultSettings = {startWeight:100, goalWeight:70, goalCalories:2100, goalProtein:160, goalSteps:8000, goalWater:2.5};
+var settings = safeJSON('fitProV2Settings', defaultSettings);
+var entries = safeJSON('fitProV2Entries', []);
+var meals = safeJSON('fitProV2Meals', {});
+var water = safeJSON('fitProV2Water', {});
+var userProducts = safeJSON('fitProV2UserProducts', []);
+foods = foods.concat(userProducts);
+
+var foods = [{"name":"Куриная грудка сырая","kcal":110,"p":23},{"name":"Куриная грудка готовая","kcal":165,"p":31},{"name":"Куриное бедро без кожи готовое","kcal":209,"p":26},{"name":"Куриное бедро с кожей готовое","kcal":245,"p":24},{"name":"Куриная голень готовая","kcal":180,"p":27},{"name":"Куриные крылья готовые","kcal":290,"p":24},{"name":"Индейка филе сырое","kcal":105,"p":22},{"name":"Индейка готовая","kcal":135,"p":29},{"name":"Говядина нежирная готовая","kcal":190,"p":29},{"name":"Говядина фарш 10%","kcal":217,"p":26},{"name":"Говядина фарш 20%","kcal":254,"p":25},{"name":"Телятина готовая","kcal":172,"p":30},{"name":"Свинина постная готовая","kcal":242,"p":27},{"name":"Свинина шея","kcal":343,"p":17},{"name":"Свинина карбонад","kcal":220,"p":28},{"name":"Баранина готовая","kcal":294,"p":25},{"name":"Печень говяжья","kcal":135,"p":20},{"name":"Печень куриная","kcal":167,"p":24},{"name":"Сердце говяжье","kcal":165,"p":28},{"name":"Язык говяжий","kcal":224,"p":16},{"name":"Ветчина","kcal":145,"p":21},{"name":"Колбаса варёная","kcal":257,"p":13},{"name":"Колбаса копчёная","kcal":450,"p":20},{"name":"Сосиски","kcal":300,"p":12},{"name":"Лосось","kcal":208,"p":20},{"name":"Семга","kcal":220,"p":21},{"name":"Форель","kcal":190,"p":20},{"name":"Тунец свежий","kcal":132,"p":28},{"name":"Тунец консервированный в воде","kcal":116,"p":26},{"name":"Тунец консервированный в масле","kcal":198,"p":29},{"name":"Треска","kcal":82,"p":18},{"name":"Минтай","kcal":72,"p":16},{"name":"Хек","kcal":86,"p":17},{"name":"Судак","kcal":84,"p":19},{"name":"Карп","kcal":127,"p":18},{"name":"Скумбрия","kcal":205,"p":19},{"name":"Сельдь","kcal":217,"p":18},{"name":"Сардина","kcal":208,"p":25},{"name":"Креветки","kcal":99,"p":24},{"name":"Кальмар","kcal":92,"p":16},{"name":"Мидии","kcal":86,"p":12},{"name":"Крабовое мясо","kcal":97,"p":19},{"name":"Икра красная","kcal":250,"p":29},{"name":"Яйцо куриное","kcal":157,"p":13},{"name":"Белок яйца","kcal":52,"p":11},{"name":"Желток яйца","kcal":322,"p":16},{"name":"Яйцо перепелиное","kcal":168,"p":12},{"name":"Молоко 0.5%","kcal":35,"p":3.4},{"name":"Молоко 1.5%","kcal":44,"p":3.2},{"name":"Молоко 2.5%","kcal":52,"p":3},{"name":"Молоко 3.2%","kcal":60,"p":3},{"name":"Кефир 1%","kcal":40,"p":3},{"name":"Кефир 2.5%","kcal":53,"p":3},{"name":"Айран","kcal":37,"p":2},{"name":"Ряженка 2.5%","kcal":54,"p":3},{"name":"Йогурт натуральный 2%","kcal":73,"p":10},{"name":"Греческий йогурт 2%","kcal":73,"p":10},{"name":"Йогурт сладкий","kcal":95,"p":4},{"name":"Творог 0%","kcal":71,"p":16.5},{"name":"Творог 2%","kcal":103,"p":18},{"name":"Творог 5%","kcal":121,"p":17},{"name":"Творог 9%","kcal":159,"p":16},{"name":"Сметана 10%","kcal":119,"p":3},{"name":"Сметана 15%","kcal":162,"p":3},{"name":"Сметана 20%","kcal":206,"p":2.8},{"name":"Сыр российский","kcal":363,"p":24},{"name":"Сыр голландский","kcal":352,"p":26},{"name":"Сыр моцарелла","kcal":280,"p":18},{"name":"Сыр сулугуни","kcal":286,"p":20},{"name":"Сыр фета","kcal":264,"p":14},{"name":"Сыр плавленый","kcal":300,"p":16},{"name":"Сливочное масло","kcal":748,"p":0.5},{"name":"Рис белый сухой","kcal":344,"p":7},{"name":"Рис бурый сухой","kcal":337,"p":7.5},{"name":"Рис варёный","kcal":116,"p":2.7},{"name":"Гречка сухая","kcal":343,"p":13},{"name":"Гречка варёная","kcal":110,"p":4},{"name":"Овсянка сухая","kcal":366,"p":12},{"name":"Овсянка готовая на воде","kcal":88,"p":3},{"name":"Пшено сухое","kcal":348,"p":11},{"name":"Перловка сухая","kcal":315,"p":9},{"name":"Булгур сухой","kcal":342,"p":12},{"name":"Булгур варёный","kcal":83,"p":3},{"name":"Кускус сухой","kcal":376,"p":13},{"name":"Киноа сухая","kcal":368,"p":14},{"name":"Манка сухая","kcal":328,"p":10},{"name":"Макароны твёрдых сортов сухие","kcal":350,"p":12},{"name":"Макароны варёные","kcal":131,"p":5},{"name":"Лапша яичная сухая","kcal":384,"p":14},{"name":"Хлеб белый","kcal":265,"p":8},{"name":"Хлеб цельнозерновой","kcal":247,"p":9},{"name":"Хлеб ржаной","kcal":210,"p":6},{"name":"Лаваш тонкий","kcal":277,"p":9},{"name":"Тостовый хлеб","kcal":290,"p":9},{"name":"Сухари","kcal":350,"p":10},{"name":"Хлебцы ржаные","kcal":320,"p":10},{"name":"Мука пшеничная","kcal":364,"p":10},{"name":"Мука цельнозерновая","kcal":340,"p":13},{"name":"Чечевица сухая","kcal":352,"p":24},{"name":"Чечевица варёная","kcal":116,"p":9},{"name":"Фасоль сухая","kcal":333,"p":21},{"name":"Фасоль варёная","kcal":127,"p":9},{"name":"Нут сухой","kcal":364,"p":19},{"name":"Нут варёный","kcal":164,"p":9},{"name":"Горох сухой","kcal":299,"p":23},{"name":"Горошек зелёный","kcal":81,"p":5},{"name":"Соевый сыр тофу","kcal":76,"p":8},{"name":"Картофель","kcal":77,"p":2},{"name":"Картофель варёный","kcal":82,"p":2},{"name":"Картофель жареный","kcal":192,"p":3},{"name":"Батат","kcal":86,"p":1.6},{"name":"Морковь","kcal":41,"p":0.9},{"name":"Свёкла","kcal":43,"p":1.6},{"name":"Капуста белокочанная","kcal":25,"p":1.3},{"name":"Капуста пекинская","kcal":16,"p":1.2},{"name":"Капуста цветная","kcal":25,"p":1.9},{"name":"Брокколи","kcal":34,"p":2.8},{"name":"Огурец","kcal":15,"p":0.7},{"name":"Помидор","kcal":18,"p":0.9},{"name":"Перец болгарский","kcal":31,"p":1},{"name":"Кабачок","kcal":24,"p":0.6},{"name":"Баклажан","kcal":25,"p":1},{"name":"Лук репчатый","kcal":40,"p":1.1},{"name":"Чеснок","kcal":149,"p":6},{"name":"Редис","kcal":16,"p":0.7},{"name":"Салат листовой","kcal":15,"p":1.4},{"name":"Шпинат","kcal":23,"p":2.9},{"name":"Зелень укроп","kcal":43,"p":3.5},{"name":"Петрушка","kcal":36,"p":3},{"name":"Грибы шампиньоны","kcal":27,"p":4.3},{"name":"Кукуруза варёная","kcal":96,"p":3.4},{"name":"Овощной салат без масла","kcal":30,"p":1.5},{"name":"Овощи тушёные","kcal":70,"p":2},{"name":"Овощная смесь замороженная","kcal":55,"p":2.5},{"name":"Банан","kcal":89,"p":1.1},{"name":"Яблоко","kcal":52,"p":0.3},{"name":"Груша","kcal":57,"p":0.4},{"name":"Апельсин","kcal":47,"p":0.9},{"name":"Мандарин","kcal":53,"p":0.8},{"name":"Грейпфрут","kcal":42,"p":0.8},{"name":"Лимон","kcal":29,"p":1.1},{"name":"Киви","kcal":61,"p":1.1},{"name":"Виноград","kcal":69,"p":0.7},{"name":"Персик","kcal":39,"p":0.9},{"name":"Нектарин","kcal":44,"p":1.1},{"name":"Абрикос","kcal":48,"p":1.4},{"name":"Слива","kcal":46,"p":0.7},{"name":"Хурма","kcal":67,"p":0.6},{"name":"Ананас","kcal":50,"p":0.5},{"name":"Манго","kcal":60,"p":0.8},{"name":"Арбуз","kcal":30,"p":0.6},{"name":"Дыня","kcal":34,"p":0.8},{"name":"Клубника","kcal":32,"p":0.7},{"name":"Малина","kcal":52,"p":1.2},{"name":"Черника","kcal":57,"p":0.7},{"name":"Голубика","kcal":57,"p":0.7},{"name":"Смородина","kcal":44,"p":1.4},{"name":"Вишня","kcal":50,"p":1},{"name":"Черешня","kcal":63,"p":1.1},{"name":"Финики","kcal":282,"p":2.5},{"name":"Курага","kcal":241,"p":3.4},{"name":"Изюм","kcal":299,"p":3.1},{"name":"Чернослив","kcal":240,"p":2.2},{"name":"Оливковое масло","kcal":884,"p":0},{"name":"Подсолнечное масло","kcal":884,"p":0},{"name":"Кокосовое масло","kcal":862,"p":0},{"name":"Орехи грецкие","kcal":654,"p":15},{"name":"Миндаль","kcal":579,"p":21},{"name":"Фундук","kcal":628,"p":15},{"name":"Кешью","kcal":553,"p":18},{"name":"Арахис","kcal":567,"p":26},{"name":"Фисташки","kcal":562,"p":20},{"name":"Семечки подсолнечные","kcal":584,"p":21},{"name":"Семена тыквы","kcal":559,"p":30},{"name":"Семена чиа","kcal":486,"p":17},{"name":"Семена льна","kcal":534,"p":18},{"name":"Арахисовая паста","kcal":588,"p":25},{"name":"Авокадо","kcal":160,"p":2},{"name":"Оливки","kcal":145,"p":1},{"name":"Майонез","kcal":680,"p":1},{"name":"Кетчуп","kcal":112,"p":1.3},{"name":"Протеин сывороточный","kcal":390,"p":78},{"name":"Казеин","kcal":360,"p":75},{"name":"Гейнер","kcal":380,"p":20},{"name":"Кола обычная","kcal":42,"p":0},{"name":"Кола zero","kcal":1,"p":0},{"name":"Сок апельсиновый","kcal":45,"p":0.7},{"name":"Сок яблочный","kcal":46,"p":0.1},{"name":"Энергетик сахарный","kcal":45,"p":0},{"name":"Чай без сахара","kcal":1,"p":0},{"name":"Кофе без сахара","kcal":2,"p":0},{"name":"Капучино на молоке","kcal":45,"p":2},{"name":"Латте","kcal":55,"p":3},{"name":"Какао сладкое","kcal":90,"p":3},{"name":"Плов с курицей","kcal":180,"p":10},{"name":"Плов с говядиной","kcal":220,"p":9},{"name":"Борщ","kcal":57,"p":3},{"name":"Суп куриный","kcal":50,"p":4},{"name":"Суп чечевичный","kcal":75,"p":5},{"name":"Окрошка","kcal":65,"p":4},{"name":"Котлета куриная","kcal":200,"p":18},{"name":"Котлета говяжья","kcal":250,"p":17},{"name":"Котлета свиная","kcal":320,"p":15},{"name":"Омлет","kcal":154,"p":10},{"name":"Сырники","kcal":220,"p":14},{"name":"Блины","kcal":230,"p":6},{"name":"Пельмени варёные","kcal":250,"p":12},{"name":"Манты","kcal":230,"p":12},{"name":"Самса с мясом","kcal":320,"p":12},{"name":"Лагман","kcal":120,"p":7},{"name":"Бешбармак","kcal":230,"p":13},{"name":"Шашлык куриный","kcal":180,"p":25},{"name":"Шашлык говяжий","kcal":220,"p":25},{"name":"Шашлык бараний","kcal":280,"p":22},{"name":"Голубцы","kcal":120,"p":7},{"name":"Перец фаршированный","kcal":115,"p":7},{"name":"Пюре картофельное","kcal":110,"p":2},{"name":"Гречка с курицей","kcal":140,"p":12},{"name":"Рис с курицей","kcal":150,"p":12},{"name":"Макароны с мясом","kcal":210,"p":11},{"name":"Цезарь с курицей","kcal":190,"p":11},{"name":"Оливье","kcal":198,"p":5},{"name":"Винегрет","kcal":130,"p":2},{"name":"Шаурма куриная средняя","kcal":220,"p":12},{"name":"Бургер","kcal":260,"p":13},{"name":"Чизбургер","kcal":300,"p":15},{"name":"Картофель фри","kcal":312,"p":3.4},{"name":"Пицца маргарита","kcal":250,"p":11},{"name":"Пицца пепперони","kcal":300,"p":13},{"name":"Хот-дог","kcal":290,"p":10},{"name":"Наггетсы","kcal":295,"p":15},{"name":"Донер","kcal":230,"p":12},{"name":"Шоколад молочный","kcal":535,"p":7},{"name":"Шоколад тёмный","kcal":546,"p":5},{"name":"Печенье","kcal":450,"p":6},{"name":"Вафли","kcal":520,"p":6},{"name":"Торт","kcal":350,"p":5},{"name":"Мороженое","kcal":207,"p":3.5},{"name":"Мёд","kcal":304,"p":0.3},{"name":"Сахар","kcal":387,"p":0},{"name":"Зефир","kcal":326,"p":0.8},{"name":"Мармелад","kcal":321,"p":0.1},{"name":"Роллы с лососем","kcal":180,"p":8},{"name":"Суши с лососем","kcal":160,"p":9},{"name":"Суши с тунцом","kcal":145,"p":10},{"name":"Хумус","kcal":166,"p":8},{"name":"Гуакамоле","kcal":150,"p":2},{"name":"Соевый соус","kcal":53,"p":8},{"name":"Творожный сыр","kcal":250,"p":6},{"name":"Консервы фасоль в томате","kcal":100,"p":5},{"name":"Кукурузные хлопья","kcal":360,"p":7},{"name":"Мюсли","kcal":350,"p":10},{"name":"Гранола","kcal":450,"p":10},{"name":"Протеиновый батончик","kcal":350,"p":30},{"name":"Батончик шоколадный","kcal":480,"p":6},{"name":"Салат цезарь с курицей готовый","kcal":190,"p":11},{"name":"Салат греческий готовый","kcal":140,"p":5},{"name":"Салат крабовый готовый","kcal":180,"p":7},{"name":"Салат с тунцом готовый","kcal":150,"p":12},{"name":"Салат оливье готовый","kcal":198,"p":5},{"name":"Салат винегрет готовый","kcal":130,"p":2},{"name":"Боул с курицей и рисом","kcal":145,"p":12},{"name":"Боул с лососем","kcal":180,"p":12},{"name":"Боул с тунцом","kcal":160,"p":14},{"name":"Поке с лососем","kcal":170,"p":10},{"name":"Поке с курицей","kcal":145,"p":12},{"name":"Сэндвич с курицей","kcal":230,"p":14},{"name":"Сэндвич с тунцом","kcal":215,"p":13},{"name":"Сэндвич с ветчиной и сыром","kcal":260,"p":14},{"name":"Сэндвич с яйцом","kcal":210,"p":11},{"name":"Ролл с курицей","kcal":220,"p":12},{"name":"Ролл цезарь","kcal":230,"p":12},{"name":"Тортилья с индейкой","kcal":210,"p":15},{"name":"Онигири с лососем","kcal":190,"p":6},{"name":"Онигири с тунцом","kcal":180,"p":7},{"name":"Онигири с курицей","kcal":185,"p":7},{"name":"Суп том ям готовый","kcal":85,"p":6},{"name":"Крем-суп грибной","kcal":90,"p":3},{"name":"Крем-суп тыквенный","kcal":70,"p":2},{"name":"Куриный суп готовый","kcal":50,"p":4},{"name":"Солянка готовая","kcal":95,"p":5},{"name":"Паста карбонара готовая","kcal":260,"p":10},{"name":"Паста болоньезе готовая","kcal":210,"p":11},{"name":"Паста с курицей","kcal":190,"p":12},{"name":"Лазанья мясная","kcal":190,"p":11},{"name":"Курица терияки с рисом","kcal":170,"p":13},{"name":"Говядина с гречкой готовая","kcal":150,"p":13},{"name":"Котлета по-киевски","kcal":290,"p":15},{"name":"Куриные тефтели","kcal":170,"p":15},{"name":"Тефтели говяжьи","kcal":210,"p":14},{"name":"Гречка с грибами готовая","kcal":120,"p":4},{"name":"Рис с овощами готовый","kcal":110,"p":3},{"name":"Картофель запечённый готовый","kcal":120,"p":2},{"name":"Овощи гриль готовые","kcal":80,"p":2},{"name":"Пельмени говядина свинина","kcal":260,"p":12},{"name":"Пельмени куриные","kcal":220,"p":13},{"name":"Вареники с картошкой","kcal":190,"p":5},{"name":"Вареники с творогом","kcal":220,"p":9},{"name":"Хинкали","kcal":235,"p":11},{"name":"Наггетсы замороженные","kcal":270,"p":14},{"name":"Стрипсы куриные","kcal":260,"p":16},{"name":"Котлеты замороженные куриные","kcal":210,"p":15},{"name":"Котлеты замороженные говяжьи","kcal":250,"p":16},{"name":"Блины с мясом","kcal":240,"p":10},{"name":"Блины с творогом","kcal":230,"p":9},{"name":"Блины без начинки","kcal":210,"p":6},{"name":"Сырники замороженные","kcal":220,"p":14},{"name":"Пицца замороженная сырная","kcal":260,"p":11},{"name":"Пицца замороженная мясная","kcal":290,"p":12},{"name":"Пицца замороженная овощная","kcal":230,"p":9},{"name":"Чебурек","kcal":300,"p":10},{"name":"Самса куриная","kcal":290,"p":12},{"name":"Самса говяжья","kcal":320,"p":12},{"name":"Круассан с ветчиной и сыром","kcal":340,"p":11},{"name":"Йогурт питьевой клубника","kcal":80,"p":3},{"name":"Йогурт питьевой без сахара","kcal":55,"p":4},{"name":"Творожок сладкий","kcal":140,"p":8},{"name":"Творожный десерт","kcal":180,"p":7},{"name":"Сырок глазированный","kcal":400,"p":8},{"name":"Молочный коктейль","kcal":95,"p":3},{"name":"Кефир био","kcal":45,"p":3},{"name":"Скир натуральный","kcal":65,"p":11},{"name":"Скир ягодный","kcal":90,"p":10},{"name":"Простокваша","kcal":58,"p":3},{"name":"Сливки 10%","kcal":118,"p":3},{"name":"Сливки 20%","kcal":206,"p":2.5},{"name":"Молоко безлактозное 1.5%","kcal":44,"p":3.2},{"name":"Молоко безлактозное 2.5%","kcal":52,"p":3},{"name":"Молоко овсяное","kcal":45,"p":1},{"name":"Молоко миндальное","kcal":25,"p":0.5},{"name":"Молоко кокосовое питьевое","kcal":50,"p":0.5},{"name":"Сыр чеддер","kcal":402,"p":25},{"name":"Сыр пармезан","kcal":431,"p":38},{"name":"Сыр гауда","kcal":356,"p":25},{"name":"Сыр маасдам","kcal":350,"p":25},{"name":"Сыр брынза","kcal":260,"p":17},{"name":"Сыр творожный лёгкий","kcal":180,"p":9},{"name":"Колбаса докторская","kcal":257,"p":13},{"name":"Салями","kcal":430,"p":22},{"name":"Бекон","kcal":500,"p":14},{"name":"Грудинка копчёная","kcal":520,"p":10},{"name":"Индейка нарезка","kcal":110,"p":20},{"name":"Куриная ветчина","kcal":130,"p":18},{"name":"Фасоль красная консервированная","kcal":95,"p":6},{"name":"Нут консервированный","kcal":120,"p":6},{"name":"Кукуруза консервированная","kcal":86,"p":3},{"name":"Горошек консервированный","kcal":73,"p":5},{"name":"Томаты протёртые","kcal":32,"p":1.5},{"name":"Паста томатная","kcal":82,"p":4},{"name":"Огурцы маринованные","kcal":16,"p":0.8},{"name":"Оливки зелёные","kcal":145,"p":1},{"name":"Маслины","kcal":115,"p":1},{"name":"Тунец салатный","kcal":116,"p":25},{"name":"Сардина в масле","kcal":220,"p":20},{"name":"Шпроты","kcal":363,"p":17},{"name":"Печень трески","kcal":613,"p":4},{"name":"Икра кабачковая","kcal":97,"p":1},{"name":"Хумус классический","kcal":166,"p":8},{"name":"Каша овсяная быстрого приготовления","kcal":370,"p":11},{"name":"Каша рисовая быстрого приготовления","kcal":360,"p":7},{"name":"Каша гречневая быстрого приготовления","kcal":330,"p":10},{"name":"Гранола шоколадная","kcal":460,"p":9},{"name":"Гранола ореховая","kcal":470,"p":10},{"name":"Мюсли без сахара","kcal":340,"p":10},{"name":"Кукурузные хлопья сладкие","kcal":380,"p":7},{"name":"Подушечки шоколадные","kcal":420,"p":8},{"name":"Хлебцы кукурузные","kcal":370,"p":8},{"name":"Хлебцы гречневые","kcal":320,"p":10},{"name":"Хлебцы рисовые","kcal":380,"p":8},{"name":"Тортилья пшеничная","kcal":310,"p":8},{"name":"Булочка для бургера","kcal":280,"p":8},{"name":"Багет","kcal":270,"p":8},{"name":"Чиабатта","kcal":260,"p":8},{"name":"Чипсы картофельные","kcal":536,"p":6},{"name":"Чипсы начос","kcal":500,"p":7},{"name":"Сухарики","kcal":410,"p":11},{"name":"Попкорн солёный","kcal":380,"p":8},{"name":"Попкорн сладкий","kcal":450,"p":5},{"name":"Протеиновый батончик шоколад","kcal":350,"p":30},{"name":"Батончик мюсли","kcal":390,"p":8},{"name":"Батончик ореховый","kcal":480,"p":12},{"name":"Печенье овсяное","kcal":430,"p":6},{"name":"Печенье шоколадное","kcal":490,"p":6},{"name":"Пряники","kcal":350,"p":5},{"name":"Вафли шоколадные","kcal":520,"p":6},{"name":"Круассан классический","kcal":406,"p":8},{"name":"Пончик","kcal":420,"p":6},{"name":"Маффин шоколадный","kcal":420,"p":6},{"name":"Эклер","kcal":330,"p":6},{"name":"Творожная запеканка","kcal":190,"p":12},{"name":"Пудинг ванильный","kcal":120,"p":3},{"name":"Пудинг шоколадный","kcal":140,"p":3},{"name":"Желе фруктовое","kcal":80,"p":1},{"name":"Вода газированная","kcal":0,"p":0},{"name":"Вода негазированная","kcal":0,"p":0},{"name":"Квас","kcal":37,"p":0},{"name":"Компот","kcal":60,"p":0.2},{"name":"Морс","kcal":45,"p":0.2},{"name":"Сок томатный","kcal":18,"p":0.8},{"name":"Холодный чай сладкий","kcal":35,"p":0},{"name":"Изотоник","kcal":25,"p":0},{"name":"Соус терияки","kcal":140,"p":4},{"name":"Соус барбекю","kcal":170,"p":1},{"name":"Соус сырный","kcal":300,"p":3},{"name":"Соус чесночный","kcal":350,"p":2},{"name":"Горчица","kcal":66,"p":4},{"name":"Аджика","kcal":59,"p":2},{"name":"Песто","kcal":450,"p":5},{"name":"Соус песто","kcal":450,"p":5},{"name":"Ягоды замороженные смесь","kcal":45,"p":1},{"name":"Манго замороженное","kcal":60,"p":0.8},{"name":"Овощи мексиканская смесь","kcal":70,"p":3},{"name":"Овощи итальянская смесь","kcal":50,"p":2},{"name":"Брокколи замороженная","kcal":34,"p":3},{"name":"Шпинат замороженный","kcal":25,"p":3},{"name":"Картофельные дольки замороженные","kcal":150,"p":3},{"name":"Картофель фри замороженный","kcal":180,"p":3},{"name":"Курица гриль","kcal":210,"p":27},{"name":"Куриное филе запечённое","kcal":150,"p":29},{"name":"Индейка запечённая","kcal":130,"p":27},{"name":"Ростбиф","kcal":170,"p":27},{"name":"Буженина","kcal":250,"p":16},{"name":"Рёбра свиные","kcal":320,"p":18},{"name":"Фрикадельки куриные","kcal":170,"p":15},{"name":"Фрикадельки говяжьи","kcal":220,"p":14},{"name":"Куриные колбаски","kcal":180,"p":16},{"name":"Говяжьи колбаски","kcal":280,"p":14},{"name":"Пюре яблочное без сахара","kcal":50,"p":0.3},{"name":"Пюре фруктовое","kcal":65,"p":0.5},{"name":"Хлебец с творогом","kcal":160,"p":10},{"name":"Салат морковь по-корейски","kcal":130,"p":1},{"name":"Капуста квашеная","kcal":19,"p":1.8},{"name":"Свёкла варёная","kcal":49,"p":1.8},{"name":"Рамен с курицей","kcal":110,"p":6},{"name":"Удон с курицей","kcal":170,"p":9},{"name":"Соба с овощами","kcal":150,"p":6},{"name":"Фунчоза с курицей","kcal":160,"p":10},{"name":"Кимчи","kcal":25,"p":2},{"name":"Гёдза с курицей","kcal":230,"p":12},{"name":"Гёдза со свининой","kcal":260,"p":11},{"name":"Спринг-роллы","kcal":180,"p":6},{"name":"Буррито с курицей","kcal":230,"p":12},{"name":"Кесадилья с сыром","kcal":300,"p":12},{"name":"Тако с говядиной","kcal":250,"p":13},{"name":"Курт","kcal":260,"p":25},{"name":"Казы","kcal":470,"p":18},{"name":"Шужук","kcal":410,"p":18},{"name":"Баурсак","kcal":390,"p":7},{"name":"Лепёшка тандырная","kcal":280,"p":8},{"name":"Чак-чак","kcal":420,"p":5},{"name":"Кымыз","kcal":50,"p":2},{"name":"Шубат","kcal":70,"p":3},{"name":"Айран домашний","kcal":37,"p":2},{"name":"Долма","kcal":180,"p":8},{"name":"Самса с тыквой","kcal":250,"p":6},{"name":"Манты с тыквой","kcal":190,"p":6},{"name":"Манты с мясом","kcal":230,"p":12},{"name":"Лагман жареный","kcal":180,"p":9},{"name":"Лагман суп","kcal":120,"p":7},{"name":"Бешбармак с кониной","kcal":250,"p":14},{"name":"Плов узбекский","kcal":220,"p":8}];
+
+var workoutNames = ['Нет','Силовая А','Силовая Б','Кардио/ходьба','Пресс 15 минут','Ноги дома','Верх тела','Лёгкая мобилити','HIIT без прыжков'];
+var workouts = [
+{title:'Силовая А',type:'Силовая',tags:['всё тело','рюкзак','45 мин'],ex:['Приседания с рюкзаком 3×10–15','Отжимания 3×8–15','Тяга рюкзака 3×10–15','Румынская тяга 3×10–15','Жим рюкзака вверх 3×8–12','Планка 3×30–60 сек']},
+{title:'Силовая Б',type:'Силовая',tags:['всё тело','стул','45 мин'],ex:['Выпады назад 3×8–12','Ягодичный мост 3×12–20','Тяга рюкзака 3×10–15','Отжимания узким хватом 3×8–12','Бицепс с рюкзаком 2×12','Пресс 3×15']},
+{title:'Ноги дома',type:'Силовая',tags:['ноги','ягодицы','35 мин'],ex:['Приседания 4×15','Выпады 3×12 на ногу','Ягодичный мост 4×20','Подъём на носки 4×20','Стульчик у стены 3×45 сек']},
+{title:'Верх тела',type:'Силовая',tags:['грудь','спина','руки'],ex:['Отжимания 4×макс','Тяга рюкзака 4×12','Жим рюкзака вверх 3×12','Разгибания на трицепс от стула 3×10','Бицепс с рюкзаком 3×12']},
+{title:'Кардио ходьба',type:'Кардио',tags:['жиросжигание','45–60 мин'],ex:['Быстрая ходьба 45–60 минут','Пульс умеренный','Можно говорить короткими фразами']},
+{title:'HIIT без прыжков',type:'Кардио',tags:['20 мин','без шума'],ex:['30 сек работа / 30 сек отдых × 4 круга','Шаги в планке','Приседания','Альпинист медленно','Бой с тенью']},
+{title:'Пресс 15 минут',type:'Пресс',tags:['кор','15 мин'],ex:['Скручивания 3×15','Подъём ног 3×12','Планка 3×40 сек','Боковая планка 2×30 сек','Велосипед 3×20']},
+{title:'Лёгкая мобилити',type:'Лёгкая',tags:['восстановление','10–20 мин'],ex:['Круги плечами','Кошка-корова','Растяжка сгибателей бедра','Наклоны','Лёгкая прогулка 20 мин']},
+{title:'Утро 10 минут',type:'Лёгкая',tags:['быстро','утро'],ex:['Приседания 2×15','Отжимания от стола 2×12','Планка 2×30 сек','Наклоны 2×15','Ходьба на месте 3 мин']}
+];
+
+function saveStorage(){
+  localStorage.setItem('fitProV2Settings', JSON.stringify(settings));
+  localStorage.setItem('fitProV2Entries', JSON.stringify(entries));
+  localStorage.setItem('fitProV2Meals', JSON.stringify(meals));
+  localStorage.setItem('fitProV2Water', JSON.stringify(water));
+  localStorage.setItem('fitProV2UserProducts', JSON.stringify(userProducts));
+}
+
+function dayMeals(d){ return meals[d] || []; }
+function dayWater(d){ return water[d] || 0; }
+function mealTotals(d){
+  return dayMeals(d).reduce(function(a,m){ a.kcal += m.kcal || 0; a.p += m.p || 0; return a; }, {kcal:0,p:0});
+}
+function planByDay(d){
+  var day = new Date(d + 'T12:00:00').getDay();
+  var map = {1:'Силовая А',2:'Кардио/ходьба',3:'Силовая Б',4:'Кардио/ходьба',5:'Силовая А',6:'Лёгкая мобилити',0:'Нет'};
+  return map[day];
+}
+
+function initSelects(){
+  el('workout').innerHTML = workoutNames.map(function(x){ return '<option>'+x+'</option>'; }).join('');
+}
+
+function renderTodayPlan(){
+  var d = val('date') || today();
+  setText('todayPlan', 'Сегодня по плану: ' + planByDay(d) + '. Калории ' + settings.goalCalories + ' ккал, белок ' + settings.goalProtein + '+ г, вода ' + settings.goalWater + ' л, шаги ' + settings.goalSteps + '+.');
+}
+function fillPlanForToday(){
+  el('workout').value = planByDay(val('date') || today());
+  renderTodayPlan();
+}
+
+function loadDate(d){
+  setVal('date', d);
+  var e = entries.find(function(x){ return x.date === d; }) || {};
+  setVal('weight', e.weight != null ? e.weight : '');
+  setVal('steps', e.steps != null ? e.steps : '');
+  setVal('sleep', e.sleep != null ? e.sleep : '');
+  setVal('note', e.note || '');
+  el('workout').value = e.workout || planByDay(d);
+  el('doneWorkout').checked = !!e.doneWorkout;
+  el('doneFood').checked = !!e.doneFood;
+  el('doneSteps').checked = !!e.doneSteps;
+  el('noSugar').checked = !!e.noSugar;
+  renderTodayPlan(); renderMeals(); renderWater(); updateSummary();
+}
+
+function saveEntry(){
+  var d = val('date') || today();
+  var total = mealTotals(d);
+  var e = {
+    date:d,
+    weight:num(val('weight')),
+    steps:num(val('steps')),
+    sleep:num(val('sleep')),
+    workout:val('workout'),
+    doneWorkout:el('doneWorkout').checked,
+    doneFood:el('doneFood').checked,
+    doneSteps:el('doneSteps').checked,
+    noSugar:el('noSugar').checked,
+    note:val('note'),
+    calories:Math.round(total.kcal),
+    protein:Math.round(total.p),
+    water:dayWater(d)
+  };
+  entries = entries.filter(function(x){ return x.date !== d; });
+  entries.push(e);
+  entries.sort(function(a,b){ return a.date.localeCompare(b.date); });
+  saveStorage();
+  updateAll();
+  setText('saveStatus', 'Сохранено: ' + new Date().toLocaleTimeString());
+  alert('День сохранён');
+}
+
+function renderFoodSearch(){
+  var q = (val('foodSearch') || '').toLowerCase();
+  var list = foods.filter(function(f){ return !q || f.name.toLowerCase().indexOf(q) !== -1; }).slice(0,50);
+  el('foodResults').innerHTML = list.map(function(f){
+    var idx = foods.indexOf(f);
+    return '<div class="food-item" data-food-idx="'+idx+'"><div><b>'+f.name+'</b><br><span class="small">'+f.kcal+' ккал, Б '+f.p+' г / 100 г</span></div><div>+</div></div>';
+  }).join('');
+  Array.prototype.forEach.call(el('foodResults').querySelectorAll('.food-item'), function(node){
+    node.addEventListener('click', function(){ askFoodGrams(parseInt(node.getAttribute('data-food-idx'),10)); });
+  });
+}
+
+function askFoodGrams(i){
+  var grams = parseFloat(prompt('Сколько грамм?', '100'));
+  if(!grams || grams <= 0) return;
+  var f = foods[i];
+  addMeal({name:f.name, grams:grams, kcal:Math.round(f.kcal*grams/100), p:Math.round(f.p*grams/100*10)/10, meal:val('mealType')});
+}
+
+function addCustomFood(){
+  var name = val('customName') || 'Продукт';
+  var grams = num(val('customGrams')) || 100;
+  var kcal100 = num(val('customKcal100')) || 0;
+  var p100 = num(val('customProtein100')) || 0;
+  addMeal({name:name, grams:grams, kcal:Math.round(kcal100*grams/100), p:Math.round(p100*grams/100*10)/10, meal:val('mealType')});
+  ['customName','customGrams','customKcal100','customProtein100'].forEach(function(id){ setVal(id,''); });
+}
+
+function addMeal(m){
+  var d = val('date') || today();
+  if(!meals[d]) meals[d] = [];
+  meals[d].push(m);
+  saveStorage();
+  renderMeals(); updateSummary();
+}
+
+function removeMeal(idx){
+  var d = val('date') || today();
+  if(meals[d]) meals[d].splice(idx,1);
+  saveStorage();
+  renderMeals(); updateSummary();
+}
+
+function clearMealsToday(){
+  var d = val('date') || today();
+  if(confirm('Очистить еду за день?')){
+    meals[d] = [];
+    saveStorage(); renderMeals(); updateSummary();
+  }
+}
+
+function renderMeals(){
+  var d = val('date') || today();
+  var arr = dayMeals(d);
+  var total = mealTotals(d);
+  var html = '<p><b>'+Math.round(total.kcal)+'</b> ккал, белок <b>'+Math.round(total.p)+'</b> г</p>';
+  if(arr.length){
+    html += arr.map(function(m,i){
+      return '<div class="meal-card"><b>'+m.meal+'</b>: '+m.name+', '+m.grams+' г<br><span class="small">'+m.kcal+' ккал, Б '+m.p+' г</span><button type="button" class="secondary remove-meal" data-idx="'+i+'" style="margin-top:6px">Удалить</button></div>';
+    }).join('');
+  } else {
+    html += '<p class="small">Еда ещё не добавлена.</p>';
+  }
+  el('mealsList').innerHTML = html;
+  Array.prototype.forEach.call(el('mealsList').querySelectorAll('.remove-meal'), function(btn){
+    btn.addEventListener('click', function(){ removeMeal(parseInt(btn.getAttribute('data-idx'),10)); });
+  });
+}
+
+
+function addProductToDatabase(product){
+  if(!product || !product.name) return;
+  var exists = foods.some(function(f){ return f.name.toLowerCase() === product.name.toLowerCase(); });
+  if(!exists){
+    foods.push(product);
+    userProducts.push(product);
+    saveStorage();
+    renderFoodSearch();
+  }
+}
+
+function setBarcodeStatus(txt){
+  var node = el('barcodeStatus');
+  if(node) node.textContent = txt;
+}
+
+async function lookupBarcode(){
+  var code = (val('barcodeInput') || '').trim();
+  if(!code){ setBarcodeStatus('Введите или отсканируйте код товара.'); return; }
+  setBarcodeStatus('Ищу товар по коду ' + code + '...');
+  try{
+    var url = 'https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(code) + '.json?fields=product_name,product_name_ru,brands,nutriments,quantity';
+    var res = await fetch(url);
+    var data = await res.json();
+    if(!data || data.status !== 1 || !data.product){
+      setBarcodeStatus('Товар не найден. Можно добавить вручную по данным с упаковки.');
+      return;
+    }
+    var p = data.product;
+    var n = p.nutriments || {};
+    var name = p.product_name_ru || p.product_name || ('Товар ' + code);
+    var kcal = n['energy-kcal_100g'] || (n['energy_100g'] ? Math.round(n['energy_100g'] / 4.184) : 0);
+    var prot = n['proteins_100g'] || 0;
+    var product = {name:name, kcal:Math.round(kcal || 0), p:Math.round((prot || 0)*10)/10, barcode:code};
+    addProductToDatabase(product);
+    setBarcodeStatus('Найдено: ' + product.name + ' — ' + product.kcal + ' ккал, Б ' + product.p + ' г / 100 г. Добавлено в базу. Нажми в списке продуктов или введи граммы через поиск.');
+    setVal('foodSearch', product.name);
+    renderFoodSearch();
+  }catch(err){
+    setBarcodeStatus('Не удалось найти товар. Нужен интернет. Ошибка: ' + err.message);
+  }
+}
+
+var scanStream = null;
+var scanTimer = null;
+var detector = null;
+
+async function startScan(){
+  setBarcodeStatus('');
+  var video = el('barcodeVideo');
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    setBarcodeStatus('Камера недоступна. На iPhone открой приложение как сайт по HTTPS или введи код вручную.');
+    return;
+  }
+  if(!('BarcodeDetector' in window)){
+    setBarcodeStatus('В этом браузере нет встроенного BarcodeDetector. Используй ручной ввод кода или открой в Chrome/Android. На iPhone поддержка может быть ограничена.');
+    return;
+  }
+  try{
+    var formats = ['ean_13','ean_8','upc_a','upc_e','qr_code','code_128'];
+    detector = new BarcodeDetector({formats:formats});
+    scanStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
+    video.srcObject = scanStream;
+    video.style.display = 'block';
+    await video.play();
+    setBarcodeStatus('Наведи камеру на штрих-код или QR.');
+    scanTimer = setInterval(async function(){
+      try{
+        var codes = await detector.detect(video);
+        if(codes && codes.length){
+          var raw = codes[0].rawValue || '';
+          setVal('barcodeInput', raw);
+          setBarcodeStatus('Код найден: ' + raw);
+          stopScan();
+          lookupBarcode();
+        }
+      }catch(e){}
+    }, 600);
+  }catch(err){
+    setBarcodeStatus('Камера не открылась: ' + err.message + '. На iPhone нужен HTTPS-сайт, не локальный файл.');
+  }
+}
+
+function stopScan(){
+  if(scanTimer){ clearInterval(scanTimer); scanTimer = null; }
+  if(scanStream){
+    scanStream.getTracks().forEach(function(t){ t.stop(); });
+    scanStream = null;
+  }
+  var video = el('barcodeVideo');
+  if(video){ video.pause(); video.srcObject = null; video.style.display = 'none'; }
+}
+
+
+function previewFoodPhoto(ev){
+  var file = ev.target.files[0];
+  if(!file) return;
+  var url = URL.createObjectURL(file);
+  el('photoPreview').src = url;
+  el('photoPreview').style.display = 'block';
+}
+
+function renderWater(){
+  var d = val('date') || today();
+  var cups = Math.max(1, Math.ceil(settings.goalWater / 0.25));
+  var drank = Math.round(dayWater(d) / 0.25);
+  el('waterCups').innerHTML = '';
+  for(var i=1; i<=cups; i++){
+    var div = document.createElement('div');
+    div.className = 'cup' + (i <= drank ? ' on' : '');
+    div.textContent = '💧';
+    div.setAttribute('data-cup', i);
+    div.addEventListener('click', function(){
+      var cup = parseInt(this.getAttribute('data-cup'),10);
+      var current = Math.round(dayWater(d) / 0.25);
+      water[d] = (cup <= current ? cup - 1 : cup) * 0.25;
+      saveStorage(); renderWater(); updateSummary();
+    });
+    el('waterCups').appendChild(div);
+  }
+  setText('waterBig', dayWater(d).toFixed(2) + ' л');
+  setWidth('waterBigBar', dayWater(d) / settings.goalWater * 100);
+}
+
+function addWaterCup(){
+  var d = val('date') || today();
+  water[d] = Math.round((dayWater(d) + 0.25) * 100) / 100;
+  saveStorage(); renderWater(); updateSummary();
+}
+function removeWaterCup(){
+  var d = val('date') || today();
+  water[d] = Math.max(0, Math.round((dayWater(d) - 0.25) * 100) / 100);
+  saveStorage(); renderWater(); updateSummary();
+}
+function resetWater(){
+  var d = val('date') || today();
+  water[d] = 0;
+  saveStorage(); renderWater(); updateSummary();
+}
+
+function score(e){
+  var s = 0;
+  if(e.doneWorkout) s++;
+  if(e.doneFood) s++;
+  if(e.doneSteps || (e.steps && e.steps >= settings.goalSteps)) s++;
+  if(e.noSugar) s++;
+  return Math.round(s / 4 * 100);
+}
+
+function updateSummary(){
+  var d = val('date') || today();
+  var t = mealTotals(d);
+  var w = dayWater(d);
+  setText('todayCalories', Math.round(t.kcal));
+  setText('todayProtein', Math.round(t.p));
+  setText('todayWater', w.toFixed(2));
+  setText('goalCaloriesText', settings.goalCalories);
+  setText('goalProteinText', settings.goalProtein);
+  setText('goalWaterText', settings.goalWater);
+  setWidth('calBar', t.kcal / settings.goalCalories * 100);
+  setWidth('proteinBar', t.p / settings.goalProtein * 100);
+  setWidth('waterBar', w / settings.goalWater * 100);
+}
+
+function updateMetrics(){
+  var ww = entries.filter(function(e){ return e.weight; }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var cur = ww.length ? ww[ww.length-1].weight : settings.startWeight;
+  setText('currentWeight', cur.toFixed(1) + ' кг');
+  setText('lostWeight', Math.max(0, settings.startWeight - cur).toFixed(1) + ' кг');
+  setText('toGoal', Math.max(0, cur - settings.goalWeight).toFixed(1) + ' кг');
+  var last = entries.slice(-7);
+  var avg = last.length ? Math.round(last.reduce(function(a,e){ return a + score(e); },0) / last.length) : 0;
+  setText('weekScore', avg + '%');
+  setWidth('weekBar', avg);
+}
+
+function renderHistory(){
+  var html = '<tr><th>Дата</th><th>Вес</th><th>Ккал</th><th>Белок</th><th>Вода</th><th>Шаги</th><th>Тренировка</th><th>%</th><th></th></tr>';
+  html += entries.slice().reverse().map(function(e){
+    return '<tr><td>'+e.date+'</td><td>'+(e.weight ?? '')+'</td><td>'+(e.calories ?? '')+'</td><td>'+(e.protein ?? '')+'</td><td>'+(e.water ?? '')+'</td><td>'+(e.steps ?? '')+'</td><td>'+(e.workout || '')+'</td><td>'+score(e)+'</td><td><button type="button" class="secondary open-entry" data-date="'+e.date+'">Открыть</button></td></tr>';
+  }).join('');
+  el('historyTable').innerHTML = html;
+  Array.prototype.forEach.call(el('historyTable').querySelectorAll('.open-entry'), function(btn){
+    btn.addEventListener('click', function(){ loadDate(btn.getAttribute('data-date')); switchTab('today'); });
+  });
+}
+
+function drawChart(canvasId, title, series){
+  var c = el(canvasId);
+  if(!c) return;
+  var ctx = c.getContext('2d');
+  var w = c.width, h = c.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = '#07111f'; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = '#263248'; ctx.lineWidth = 1;
+  for(var i=0;i<5;i++){ var y=30+i*(h-55)/4; ctx.beginPath(); ctx.moveTo(45,y); ctx.lineTo(w-15,y); ctx.stroke(); }
+  ctx.fillStyle = '#9ca3af'; ctx.font = '13px system-ui'; ctx.fillText(title, 14, 18);
+  var values = [];
+  series.forEach(function(s){ s.data.forEach(function(v){ if(v!=null && !isNaN(v)) values.push(v); }); });
+  if(values.length === 0){ ctx.fillText('Нет данных', 50, 140); return; }
+  var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+  if(min === max){ min -= 1; max += 1; }
+  var left=45, right=w-15, top=30, bottom=h-25;
+  function xAt(i,len){ return len <= 1 ? left : left + i*(right-left)/(len-1); }
+  function yAt(v){ return bottom - (v-min)*(bottom-top)/(max-min); }
+  var colors = ['#38bdf8','#22c55e','#f59e0b','#ef4444'];
+  series.forEach(function(s,si){
+    ctx.strokeStyle = colors[si % colors.length]; ctx.fillStyle = colors[si % colors.length]; ctx.lineWidth = 2;
+    ctx.beginPath();
+    var started=false;
+    s.data.forEach(function(v,i){
+      if(v==null || isNaN(v)) return;
+      var x=xAt(i,s.data.length), y=yAt(v);
+      if(!started){ ctx.moveTo(x,y); started=true; } else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    s.data.forEach(function(v,i){
+      if(v==null || isNaN(v)) return;
+      var x=xAt(i,s.data.length), y=yAt(v);
+      ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
+    });
+    ctx.fillText(s.name, 55 + si*120, h-6);
+  });
+}
+
+function renderCharts(){
+  var labels = entries.map(function(e){ return e.date; });
+  drawChart('weightChart','Вес', [{name:'Вес', data:entries.map(function(e){ return e.weight; })}]);
+  drawChart('calChart','Калории', [{name:'Ккал', data:entries.map(function(e){ return e.calories; })}]);
+  drawChart('proteinWaterChart','Белок и вода', [
+    {name:'Белок', data:entries.map(function(e){ return e.protein; })},
+    {name:'Вода x50', data:entries.map(function(e){ return e.water != null ? e.water*50 : null; })}
+  ]);
+  drawChart('scoreChart','Выполнение %', [{name:'%', data:entries.map(score)}]);
+}
+
+function renderWorkouts(){
+  var f = val('workoutFilter');
+  var q = (val('workoutSearch') || '').toLowerCase();
+  var arr = workouts.filter(function(w){
+    var text = (w.title + ' ' + w.type + ' ' + w.tags.join(' ') + ' ' + w.ex.join(' ')).toLowerCase();
+    return (f === 'Все' || w.type === f) && (!q || text.indexOf(q) !== -1);
+  });
+  el('workoutLibrary').innerHTML = arr.map(function(w){
+    return '<div class="wcard"><h3>'+w.title+'</h3><div>'+w.tags.map(function(t){return '<span class="tag">'+t+'</span>';}).join('')+'</div><ol>'+w.ex.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ol><button type="button" class="select-workout" data-title="'+w.title+'">Поставить на сегодня</button></div>';
+  }).join('');
+  Array.prototype.forEach.call(el('workoutLibrary').querySelectorAll('.select-workout'), function(btn){
+    btn.addEventListener('click', function(){ el('workout').value = btn.getAttribute('data-title'); switchTab('today'); });
+  });
+}
+
+function loadSettings(){
+  Object.keys(defaultSettings).forEach(function(k){ setVal(k, settings[k]); });
+}
+function saveSettings(){
+  Object.keys(defaultSettings).forEach(function(k){ var v = num(val(k)); if(v !== null) settings[k] = v; });
+  saveStorage(); renderWater(); updateSummary(); updateMetrics(); loadSettings();
+  alert('Настройки сохранены');
+}
+
+function exportData(){
+  var blob = new Blob([JSON.stringify({settings:settings, entries:entries, meals:meals, water:water, userProducts:userProducts}, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fit-tracker-pro-v2-data.json';
+  a.click();
+}
+function resetData(){
+  if(confirm('Очистить все данные?')){
+    entries = []; meals = {}; water = {}; userProducts = [];
+    saveStorage(); updateAll();
+  }
+}
+function switchTab(id){
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(t){ t.classList.toggle('active', t.getAttribute('data-tab') === id); });
+  Array.prototype.forEach.call(document.querySelectorAll('.section'), function(s){ s.classList.toggle('active', s.id === id); });
+  if(id === 'charts') renderCharts();
+}
+
+function bindEvents(){
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(t){
+    t.addEventListener('click', function(){ switchTab(t.getAttribute('data-tab')); });
+  });
+  el('date').addEventListener('change', function(){ loadDate(val('date')); });
+  el('saveDayBtn').addEventListener('click', saveEntry);
+  el('planBtn').addEventListener('click', fillPlanForToday);
+  el('foodSearch').addEventListener('input', renderFoodSearch);
+  el('addCustomFoodBtn').addEventListener('click', addCustomFood);
+  el('lookupBarcodeBtn').addEventListener('click', lookupBarcode);
+  el('startScanBtn').addEventListener('click', startScan);
+  el('stopScanBtn').addEventListener('click', stopScan);
+  el('clearMealsBtn').addEventListener('click', clearMealsToday);
+  el('foodPhoto').addEventListener('change', previewFoodPhoto);
+  el('addWaterBtn').addEventListener('click', addWaterCup);
+  el('removeWaterBtn').addEventListener('click', removeWaterCup);
+  el('resetWaterBtn').addEventListener('click', resetWater);
+  el('workoutFilter').addEventListener('change', renderWorkouts);
+  el('workoutSearch').addEventListener('input', renderWorkouts);
+  el('exportBtn').addEventListener('click', exportData);
+  el('resetAllBtn').addEventListener('click', resetData);
+  el('saveSettingsBtn').addEventListener('click', saveSettings);
+}
+
+function updateAll(){
+  updateMetrics(); renderHistory(); renderCharts(); renderMeals(); renderWater(); updateSummary(); renderWorkouts(); loadSettings(); renderTodayPlan();
+}
+
+function start(){
+  initSelects();
+  bindEvents();
+  renderFoodSearch();
+  loadDate(today());
+  updateAll();
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', start);
+} else {
+  start();
+}
+
+})();
+</script>
+</body>
+</html>
